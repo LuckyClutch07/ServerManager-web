@@ -1,28 +1,44 @@
 import axios from 'axios';
 
-const url = "ws://localhost:3000/";
-
-
 class ServersService {
+    constructor(fileManager) {
+        this.fileManager = fileManager;
+    }
+
     //Get All cached servers.
-    static getServers() {
-        return async function() {
-            try {
-                //const res = await axios.get(url);
-                //const data = res.data;
-                
-                return await (await axios.get(url)).data;
-            } catch (err) {
-                return err;
-            }
-        };
+    getServers() {
+        let url = 'http://localhost:5000/api/servers/list/'+ this.fileManager;
+
+        return new Promise ((resolve,reject) => {
+            if(this.fileManager == null || this.fileManager === "")
+                reject("FileManager is empty.");
+
+            axios.get(url).then((res) => {
+                const data = res.data;
+
+                resolve(data[0]);
+            })
+            .catch((err)=> {
+                reject(err);
+            })
+        });
     }
+    static getFileManagers() {
+        let url = 'http://localhost:5000/api/servers/list/';
 
-    static addServer(){
+        return new Promise ((resolve,reject) => {
+            axios.get(url).then((res) => {
+                const data = res.data;
 
+                resolve(
+                    data
+                );
+            })
+            .catch((err)=> {
+                reject(err);
+            })
+        });
     }
-
-
 }
 
 export default ServersService;

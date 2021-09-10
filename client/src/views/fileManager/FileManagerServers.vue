@@ -31,45 +31,15 @@
 </template>
 
 <script>
-import "bootswatch/dist/cyborg/bootstrap.min.css";
-//import ServersComponent from './components/ServersComponent.vue'
-import ServersService from './ServersService.js';
-
 export default {
-  name: 'App',
+    name: 'FileManagerServers',
+    props: ['selectedFileManager', 'servers'],
+    data () {
 
-  components: {
-    //ServersComponent
-  },
-
-  data() {
-    return {
-      selectedFileManager: '',
-      servers: [],
-      fileManagers: [],
-      error: ''
     }
-  },
-  watch: {
-    selectedFileManager(newSelectedFileManager, oldSelectedFileManager) {
-      if(newSelectedFileManager != oldSelectedFileManager)
-        this.getServers();
-    }
-  },
-  async created() {
-    try {
-      this.fileManagers = await ServersService.getFileManagers();
-      this.selectedFileManager = this.fileManagers[0];
-      this.servers = await new ServersService(this.selectedFileManager).getServers();
-      console.log(this.servers);
-    } catch(err) {
-      this.error = err;
-    }
-  },
-  methods: {
-    async getServers() {
-      this.servers = await new ServersService(this.selectedFileManager).getServers();
-    }
-  }
 }
 </script>
+
+<style>
+
+</style>

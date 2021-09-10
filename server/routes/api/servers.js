@@ -1,66 +1,38 @@
 const express = require('express');
 const mongodb = require('mongodb');
+const dotend = require('dotenv');
 
 const router = express.Router();
 
-var servers = [{
-    "file-manager-h2H8-Gd63": 
-    [
-        {
-            "serverName": "XD",
-            "address": "127.0.0.1",
-            "port": "4653"
-        },
-        {
-            "serverName": "Server2",
-            "address": "127.0.0.1",
-            "port": "4645"
-        }
-    ]
-}];
+//GET SERVERS MAP.
+router.get('/', async (req, res) => {
+    await req.app.locals.socket.emit('servers-request', {});
 
-//GET
-router.get('', async (req, res) => {
-    const servers = await getServersList();
-
-    res.send(await servers);
+    res.status(200).send(Object.fromEntries(req.app.locals.servers));
 });
 
-const key = "jahsvbd7653rf276rt2487fhb37if476";
 
-router.get('/add', async (req, res) => {
-    if(req.query.key != key) 
-    {
-        res.sendStatus(404);
+//GET LIST FILE-MANAGERS
+router.get('/list', async (req, res) => {
+    if(req.app.locals.servers && req.app.locals.socket) {
+        await req.app.locals.socket.emit('servers-request', {});
+
+        let keys = [...req.app.locals.servers.keys()];
+
+        res.status(200).send(keys);
+    }
+});
+
+
+//GET FILE-MANAGER SERVERS.
+router.get('/list/:fileManager', async (req, res) => {
+    if(req.app.locals.servers.has(req.params.fileManager)) {
+        await req.app.locals.socket.emit('servers-request', {});
+
+        res.status(200).send(req.app.locals.servers.get(req.params.fileManager));
     } else {
-        servers.push({"file-manager-h2H8-Gd63": [{
-            "serverName": "XD",
-            "address": "127.0.0.1",
-            "port": "4653"
-        }]});
-        res.send(servers);
+        res.status(404).send({ "err": "Requested File-Manager not found."});
     }
-    
 });
-
-async function getServersList() {
-    return {
-        "file-manager-h2H8-Gd63": 
-        [
-            {
-                "serverName": "XD",
-                "address": "127.0.0.1",
-                "port": "4653"
-            },
-            {
-                "serverName": "Server2",
-                "address": "127.0.0.1",
-                "port": "4645"
-            }
-        ]
-    }
-}
-
-// Add
 
 module.exports = router;
