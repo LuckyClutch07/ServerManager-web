@@ -33,10 +33,33 @@
 <script>
 export default {
     name: 'FileManagerServers',
-    props: ['selectedFileManager', 'servers'],
-    data () {
-
+ data() {
+    return {
+      servers: [],
+      fileManagers: [],
+      error: ''
     }
+  },
+  watch: {
+    selectedFileManager(newSelectedFileManager, oldSelectedFileManager) {
+      if(newSelectedFileManager != oldSelectedFileManager)
+        this.getServers();
+    }
+  },
+  async created() {
+    try {
+      this.fileManagers = await ServersService.getFileManagers();
+      this.servers = await new ServersService(this.$route.params.fileManager).getServers();
+      console.log(this.servers);
+    } catch(err) {
+      this.error = err;
+    }
+  },
+  methods: {
+    async getServers() {
+      this.servers = await new ServersService(this.selectedFileManager).getServers();
+    }
+  }
 }
 </script>
 

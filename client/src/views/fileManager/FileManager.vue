@@ -3,11 +3,18 @@
 </template>
 
 <script>
+import ServersService from '.../ServersService.js';
+
 export default {
     name: 'FileManager',
-    data () {
-
+    async data () {
+        return {
+            fileManagers: []
+        }
     },
+    async created() {
+        this.fileManagers = await ServersService.getFileManagers();
+    }
 }
 </script>
 

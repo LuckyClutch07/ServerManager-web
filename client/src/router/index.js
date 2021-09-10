@@ -12,7 +12,10 @@ const routes = [
     {
         path: '/file-manager',
         name: 'FileManager',
-        component: FileManager
+        component: FileManager,
+        beforeEnter: (to, from, next) => {
+            
+        }
     },
     {
         path: '/file-manager/:fileManager',

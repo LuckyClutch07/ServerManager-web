@@ -6,34 +6,61 @@ const { Server } = require('socket.io');
 const app = express();
 
 const socketPort = process.env.SOCKET_PORT || 3000;
-app.locals.servers = new Map();
+app.locals.servers = [];
+app.locals.servers_console = new Map();
 
+app.locals.socket = null;
 
 app.locals.io = new Server(socketPort, {
     path: "/socket"
 });
-app.locals.socket = null;
+
+app.locals.SERVERS_EVENT = 'servers-event';
+app.locals.SERVER_CONSOLE_OUTPUT = "server-console-output";
+app.locals.SERVER_DELETE_REQUEST = "server-delete";
+app.locals.SERVER_ADD_REQUEST = "server-add";
+app.locals.WEBUI_INSERT_COMMAND = "webui-insert-command";
+app.locals.WEBUI_SHUTDOWN_SERVER = "webui-shutdown-server";
 
 app.locals.io.on('connection', (socket) => {
     app.locals.socket = socket;
-    socket.emit('servers-request', {});
 
-    socket.on('servers-request', (arg1, arg2, callback) => {
-        let keyName = Object.keys(arg2)[0];
-        let values = Object.values(arg2);   
+    socket.on(app.locals.SERVERS_EVENT, (event, obj, callback) => {
+        switch (event) {
+            case app.locals.SERVER_CONSOLE_OUTPUT:
+                app.locals.servers_console.push(obj.name, obj.lines)
+                callback ({
+                    status: "200",
+                    error: "OK, Successfully registered new lines."
+                });
+                return;
+            case app.locals.SERVER_ADD_REQUEST:
+                app.locals.servers.push(obj);
 
-        if(app.locals.servers.has(keyName)){
-            app.locals.servers.delete(keyName);
+                callback ({
+                    status: "200",
+                    error: "OK, Successfully registered new server."
+                });
+                return;
+            case app.locals.SERVER_DELETE_REQUEST:
+                var server = obj.server;
+
+                app.locals.servers = app.locals.servers.filter(function(ele){
+                    return ele.name != server;
+                });
+
+                callback ({
+                    status: "200",
+                    error: "OK, Successfully removed server."
+                });
+                return;
+            default:
+                callback ({
+                    status: "400",
+                    error: "No Listener found with that name, forgot to pass the listener name?"
+                });
         }
-
-        app.locals.servers.set(keyName, values);
-
-        callback({
-            status: "ok"
-        });
     });
-
-    socket.setMaxListeners(100);
 });
 
 //Middleware
@@ -41,7 +68,6 @@ app.use(express.json());
 app.use(cors());
 
 const servers = require('./routes/api/servers');
-const { post } = require('./routes/api/servers');
 app.use('/api/servers', servers);
 
 const port = process.env.PORT || 5000;
