@@ -1,32 +1,38 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
-import Home from '../views/Home.vue';
-import FileManager from '../views/fileManager/FileManager.vue';
-import FileManagerServers from '../views/fileManager/FileManagerServers.vue';
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+import Home from '../views/Home.vue'
+import FileManager from '../views/fileManager/FileManager.vue'
+import FileManagerServers from '../views/fileManager/FileManagerServers.vue'
+import Server from '../views/fileManager/Server.vue'
+
+Vue.use(VueRouter)
 
 const routes = [
-    {
-        path: '/',
-        name: 'Home',
-        component: Home
-    },
-    {
-        path: '/file-manager',
-        name: 'FileManager',
-        component: FileManager,
-        beforeEnter: (to, from, next) => {
-            
-        }
-    },
-    {
-        path: '/file-manager/:fileManager',
-        name: 'FileManagerServers',
-        component: FileManagerServers
-    }
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/fileManager',
+    name: 'FileManager',
+    component: FileManager
+  },
+  {
+    path: '/fileManager/:fileManager',
+    name: 'FileManagerServers',
+    component: FileManagerServers
+  },
+  {
+    path: '/:fileManager/:server',
+    name: 'Server',
+    component: Server
+  }
 ]
 
-const router = createRouter({
-    history: createWebHashHistory(),
-    routes
+const router = new VueRouter({
+  mode: 'history',
+  routes
 })
 
-export default router;
+export default router

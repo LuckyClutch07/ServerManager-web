@@ -12,13 +12,16 @@ app.locals.servers_console = new Map();
 app.locals.socket = null;
 
 app.locals.io = new Server(socketPort, {
-    path: "/socket"
+    path: "/socket",
+    cors: {
+        origin: '*',
+      }
 });
 
 app.locals.SERVERS_EVENT = 'servers-event';
 app.locals.SERVER_CONSOLE_OUTPUT = "server-console-output";
-app.locals.SERVER_DELETE_REQUEST = "server-delete";
-app.locals.SERVER_ADD_REQUEST = "server-add";
+app.locals.SERVER_DELETE_REQUEST = "server-delete-request";
+app.locals.SERVER_ADD_REQUEST = "server-add-request";
 app.locals.WEBUI_INSERT_COMMAND = "webui-insert-command";
 app.locals.WEBUI_SHUTDOWN_SERVER = "webui-shutdown-server";
 
@@ -28,19 +31,26 @@ app.locals.io.on('connection', (socket) => {
     socket.on(app.locals.SERVERS_EVENT, (event, obj, callback) => {
         switch (event) {
             case app.locals.SERVER_CONSOLE_OUTPUT:
-                app.locals.servers_console.push(obj.name, obj.lines)
-                callback ({
-                    status: "200",
-                    error: "OK, Successfully registered new lines."
+                var lines = []
+                if(app.locals.servers_console.has(obj.name)){
+                    Object.values(app.locals.servers_console.get(obj.name)).forEach(line => {
+                        lines.push(line)
+                    })
+                }
+
+                obj.lines.forEach(line => {
+                    lines.push(line);
                 });
+                app.locals.servers_console.set(obj.name, lines);
+                app.locals.io.sockets.emit(app.locals.SERVERS_EVENT, app.locals.SERVER_CONSOLE_OUTPUT, obj);
                 return;
             case app.locals.SERVER_ADD_REQUEST:
-                app.locals.servers.push(obj);
-
-                callback ({
-                    status: "200",
-                    error: "OK, Successfully registered new server."
+                app.locals.servers = app.locals.servers.filter(function(ele){
+                    return ele.name != obj.name;
                 });
+
+                app.locals.servers.push(obj);
+                app.locals.io.sockets.emit(app.locals.SERVERS_EVENT, app.locals.SERVER_ADD_REQUEST, obj);
                 return;
             case app.locals.SERVER_DELETE_REQUEST:
                 var server = obj.server;
@@ -49,16 +59,11 @@ app.locals.io.on('connection', (socket) => {
                     return ele.name != server;
                 });
 
-                callback ({
-                    status: "200",
-                    error: "OK, Successfully removed server."
-                });
+                app.locals.io.sockets.emit(app.locals.SERVERS_EVENT, app.locals.SERVER_DELETE_REQUEST, obj);
                 return;
             default:
-                callback ({
-                    status: "400",
-                    error: "No Listener found with that name, forgot to pass the listener name?"
-                });
+                app.locals.io.sockets.emit(app.locals.SERVERS_EVENT, event, obj);
+            return;
         }
     });
 });
